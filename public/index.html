@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<!--
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
+ *                                                       * 
+ *          Program:    Web Development Diploma          *
+ *          Signature:  Advanced PHP                     *
+ *          Instructor: Steve George                     *
+ *          Student:    Victor Rengifo                   *
+ *                                                       *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ 
+ Project: Assignment 2
+ Date: 2019-06-19
+ Version: 1.0
+ Page: index.html
+ Description: 
+ 
+*/ 
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Advanced PHP - Assignment 2a</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.5/css/bulma.css">
+
+    <style>
+        html {
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+        }
+
+        a:hover {
+            color: #3273dc;
+        }
+
+        a {
+            color: #363636;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+    </style>
+
+</head>
+<body>
+    
+    <div id="app">
+        <div class="section">
+            <div class="container columns">
+                <div class="column is-half is-offset-one-quarter">
+                    <h1 class="title">Booksite</h1>
+                    <h2 class="subtitle">{{ title }}</h2>
+                    <h2><a href="#" v-on:click="selectAll()" class="button" >Show All</a></h2>
+                    <table v-show="showTable" class="table  is-striped is-hoverable">
+                        <thead>
+                            <tr>
+                                <th>Cover</th>
+                                <th>Title</th>
+                                <th>Author</th>
+                                <th>Genre</th>
+                                <th>Format</th>
+                                <th>Publisher</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="book in books">
+                                <td>
+                                    <a href="#" v-on:click="showModal(book)"><img v-bind:src="'booksite/images/covers/' + book.image" alt=""></a>
+                                </td>
+                                <td>
+                                    <a href="#" v-html="book.title" v-on:click="showModal(book)"></a>
+                                </td>
+                                <td><a href="#" v-on:click="filterBooksByAuthor(book)" v-html="book.author" ></a></td>
+                                <td><a href="#" v-on:click="filterBooksByGenre(book)" v-html="book.genre" ></a></td>
+                                <td><a href="#" v-on:click="filterBooksByFormat(book)" v-html="book.format" ></a></td>
+                                <td><a href="#" v-on:click="filterBooksByPublisher(book)" v-html="book.publisher" ></a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="books"></div>
+            <wdd-modal v-bind:book="bookSelected" v-show="showWddModal" v-on:close="showWddModal = false"></wdd-modal>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.10/vue.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.0/axios.js"></script>
+
+    <script>
+
+        Vue.component('wdd-modal',{
+            props: ['book'],
+            data: function() {
+                return {
+                    
+                }
+            },
+            template: `
+        <!-- modal -->
+        <div class="modal is-active" id="book">
+            <div class="modal-background"></div>
+            <div class="modal-content">
+                <!-- content in modal -->
+                <div class="box">
+                    <h2 id="modal_title"></h2>
+                    <p><img v-bind:src="'booksite/images/covers/' + book.image" alt="" ></p>
+                    <p>
+                        <strong>Title</strong>: <span v-html="book.title" id="book_title"></span><br />
+                        <strong>Year Published</strong>: <span v-html="book.title" id="book_yearpublished"></span><br />
+                        <strong>Num Pages</strong>: <span v-html="book.num_pages" id="book_num_pages"></span><br />
+                        <strong>Author</strong>: <span v-html="book.author" id="book_author"></span><br />
+                        <strong>Publisher</strong>: <span v-html="book.publisher" id="book_publisher"></span><br />
+                        <strong>Format</strong>: <span v-html="book.format" id="book_format"></span><br />
+                        <strong>Genre</strong>: <span v-html="book.genre" id="book_genre"></span><br />
+                    </p>
+                </div>
+                <!-- end content in modal -->
+            </div>
+            <button class="modal-close is-large" aria-label="close" id="close_book" @click="$emit('close')"></button>
+        </div>
+        <!-- end modal -->
+          `
+        });
+
+        var app = new Vue({
+            el: "#app",
+            data: {
+                title: 'All Books',
+                books: [],
+                bookSelected: [],
+                showTable: false,
+                showWddModal: false
+            },
+            mounted: function() {
+                var self = this;
+                axios.get('server.php')
+                    .then(function(response){
+                        self.books = response.data;
+                        console.log(this);
+                        console.log(self);
+                    })
+                    .catch(function(errors){
+                        console.log(errors);
+                    })
+                    .finally(function(){
+                        console.log('Done');
+                        self.showTable = true;
+                    })
+            },
+            methods: {
+                selectAll: function() {
+                    var self = this;
+                    axios.get('server.php')
+                    .then(function(response){
+                        self.books = response.data;
+                    })
+                    .catch(function(errors){
+                        console.log(errors);
+                    })
+                    .finally(function(){
+                        console.log('Done');
+                        self.title = 'All Books';
+                        self.showTable = true;
+                    })                    
+                },
+                filterBooksByAuthor: function(book) {
+                    var self = this;
+                    axios.get('server.php?author_id='+book.author_id)
+                    .then(function(response){
+                        self.books = response.data;
+                    })
+                    .catch(function(errors){
+                        console.log(errors);
+                    })
+                    .finally(function(){
+                        console.log('Done');
+                        self.title = 'Books by Author: ' + book.author;
+                        self.showTable = true;
+                    })
+                },
+                filterBooksByGenre: function(book) {
+                    var self = this;
+                    axios.get('server.php?genre_id='+book.genre_id)
+                    .then(function(response){
+                        self.books = response.data;
+                    })
+                    .catch(function(errors){
+                        console.log(errors);
+                    })
+                    .finally(function(){
+                        console.log('Done');
+                        self.title = 'Books by Genre: ' + book.genre;
+                        self.showTable = true;
+                    })
+                },
+                filterBooksByFormat: function(book) {
+                    var self = this;
+                    axios.get('server.php?format_id='+book.format_id)
+                    .then(function(response){
+                        self.books = response.data;
+                    })
+                    .catch(function(errors){
+                        console.log(errors);
+                    })
+                    .finally(function(){
+                        console.log('Done');
+                        self.title = 'Books by Format: ' + book.format;
+                        self.showTable = true;
+                    })
+                },
+                filterBooksByPublisher: function(book) {
+                    var self = this;
+                    axios.get('server.php?publisher_id='+book.publisher_id)
+                    .then(function(response){
+                        self.books = response.data;
+                    })
+                    .catch(function(errors){
+                        console.log(errors);
+                    })
+                    .finally(function(){
+                        console.log('Done');
+                        self.title = 'Books by Publisher: ' + book.publisher;
+                        self.showTable = true;
+                    })
+                },
+                showModal: function(book) {
+                    var self = this;
+                    axios.get('server.php?book_id='+book.book_id)
+                    .then(function(response){
+                        self.bookSelected = response.data;
+                    })
+                    .catch(function(errors){
+                        console.log(errors);
+                    })
+                    .finally(function(){
+                        console.log('Done');
+                        self.showWddModal = true;
+                        self.showTable = true;
+                    })
+                }
+            }
+        });
+
+    </script>
+
+</body>
+</html>
